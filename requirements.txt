@@ -1,0 +1,17 @@
+langchain
+wikipedia
+langchain-community
+langchain-ollama
+python-dotenv
+pydantic
+duckduckgo-search
+yfinance
+fastapi
+uvicorn
+apscheduler
+pandas
+numpy
+scikit-learn
+xgboost
+joblib
+websockets
