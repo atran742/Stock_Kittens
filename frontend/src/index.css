@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --sky:#B8E8F0;
+  --sky2:#D4F1F9;
+  --sky3:#E8F8FC;
+  --cream:#FFFDF5;
+  --sand:#F5E6C8;
+  --gold:#C9952A;
+  --gold2:#E8B84B;
+  --dark:#3B2A1A;
+  --orange:#E8793A;
+  --red:#E85A3A;
+  --green:#5AAE6E;
+  --teal:#2A9DAE;
+  --muted:#8A7A6A;
+}
+
+body{
+  font-family:'Nunito',sans-serif;
+  background:linear-gradient(180deg,#C5EDF7 0%,#B0E0F0 60%,#A8D8E8 100%);
+  min-height:100vh;
+  color:var(--dark);
+  overflow-x:hidden;
+}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--sand);border-radius:3px;}

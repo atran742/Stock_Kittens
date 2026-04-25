@@ -1,0 +1,103 @@
+.app { min-height: 100vh; }
+
+.page-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  padding: 24px 32px;
+  min-height: calc(100vh - 64px);
+  align-items: start;
+}
+
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.right-panel {
+  position: sticky;
+  top: 78px;
+  height: calc(100vh - 98px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* HERO */
+.hero-banner {
+  background: rgba(255, 253, 245, 0.88);
+  border: 2px solid var(--gold);
+  border-radius: 20px;
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideUp 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(201,149,42,0.03) 0px,
+    rgba(201,149,42,0.03) 1px,
+    transparent 1px,
+    transparent 12px
+  );
+  pointer-events: none;
+}
+
+.hero-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 38px;
+  line-height: 1.05;
+  color: var(--dark);
+  text-shadow: 3px 3px 0 var(--sand);
+}
+
+.hero-accent { color: var(--orange); }
+
+.hero-sub {
+  font-size: 14px;
+  color: var(--teal);
+  font-weight: 800;
+  margin-top: 10px;
+}
+
+.hero-cats {
+  font-size: 60px;
+  display: flex;
+  gap: 6px;
+  filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.12));
+}
+
+.hero-cats span { animation: float 2.5s ease-in-out infinite; display: inline-block; }
+.hero-cats span:nth-child(2) { animation-delay: 0.4s; }
+.hero-cats span:nth-child(3) { animation-delay: 0.8s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+  .page-layout {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  .right-panel {
+    position: static;
+    height: 500px;
+  }
+  .hero-cats { font-size: 40px; }
+  .hero-title { font-size: 28px; }
+}

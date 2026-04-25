@@ -1,0 +1,31 @@
+# Virtual environment
+venv/
+env/
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ML model files
+*.pkl
+*.joblib
+
+# OS files
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# React / Node
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+frontend/.env.production
+
+# Logs
+*.log
+npm-debug.log*

@@ -1,0 +1,107 @@
+.market-section { animation: slideUp 0.4s ease 0.4s both; }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.section-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 24px;
+  color: var(--dark);
+  text-shadow: 2px 2px 0 var(--sand);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.updated {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.refresh-btn {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+  background: var(--gold);
+  color: white;
+}
+
+.market-wrap {
+  background: rgba(255, 253, 245, 0.92);
+  border: 2px solid var(--gold);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.market-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  padding: 12px 20px;
+  background: rgba(201, 149, 42, 0.12);
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.market-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  padding: 14px 20px;
+  align-items: center;
+  border-bottom: 1px solid rgba(201, 149, 42, 0.15);
+  transition: background 0.15s;
+}
+
+.market-row:last-child { border-bottom: none; }
+.market-row:hover { background: rgba(201, 149, 42, 0.05); }
+
+.idx-name { font-weight: 800; font-size: 14px; color: var(--dark); }
+.idx-ticker { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.idx-price { font-family: 'Fredoka One', cursive; font-size: 15px; color: var(--dark); }
+
+.up { color: var(--green); font-weight: 800; font-size: 13px; }
+.down { color: var(--red); font-weight: 800; font-size: 13px; }
+
+.pct-pill {
+  font-size: 12px;
+  font-weight: 900;
+  padding: 3px 10px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.up-pill { background: rgba(90,174,110,0.15); color: var(--green); border: 1px solid rgba(90,174,110,0.4); }
+.down-pill { background: rgba(232,90,58,0.12); color: var(--red); border: 1px solid rgba(232,90,58,0.3); }
+
+.market-loading {
+  padding: 24px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
