@@ -95,3 +95,50 @@ def get_trending_stocks() -> list[dict]:
     except Exception as e:
         print(f"Error fetching trending stocks: {e}")
         return []
+
+def get_politician_signal(ticker, target_date, csv_path="transactions.csv"):
+    try:
+        df = pd.read_csv(csv_path)
+        # Filter only for the requested stock and valid Buy(P)/Sell(S) types
+        df = df[(df['Ticker'] == ticker) & (df['Transaction Type'].isin(['P', 'S']))]
+        
+        if len(df) < 3: 
+            return "NEUTRAL (Insufficient politician trade data for this ticker)"
+
+        # Feature Engineering: Extract Month and Day to treat dates as recurring
+        df['Transaction Date'] = pd.to_datetime(df['Transaction Date'], errors='coerce')
+        df = df.dropna(subset=['Transaction Date'])
+        df['month'] = df['Transaction Date'].dt.month
+        df['day'] = df['Transaction Date'].dt.day
+        
+        # Encode Politician Names as a numerical feature
+        le_member = LabelEncoder()
+        df['member_encoded'] = le_member.fit_transform(df['Member'])
+        
+        X = df[['member_encoded', 'month', 'day']]
+        y = df['Transaction Type']
+        
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X, y)
+        
+        # Predict for every politician in the historical data for this stock to find the majority
+        dt = datetime.strptime(target_date, "%Y-%m-%d")
+        unique_members = df['member_encoded'].unique()
+        X_pred = pd.DataFrame({
+            'member_encoded': unique_members,
+            'month': dt.month,
+            'day': dt.day
+        })
+        
+        predictions = model.predict(X_pred)
+        buy_count = list(predictions).count('P')
+        sell_count = list(predictions).count('S')
+        
+        if buy_count > sell_count:
+            return f"BULLISH (Model predicts {buy_count} purchase patterns vs {sell_count} sales for this calendar date)"
+        elif sell_count > buy_count:
+            return f"BEARISH (Model predicts {sell_count} sale patterns vs {buy_count} purchases for this calendar date)"
+        else:
+            return "NEUTRAL (Mixed politician patterns for this date)"
+    except Exception as e:
+        return f"DATA UNAVAILABLE ({str(e)})"

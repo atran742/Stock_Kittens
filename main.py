@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import re
 from langchain_ollama import OllamaLLM
 
-from tools import get_price_history, get_news_headlines, LR_predict_future_price
+from tools import get_price_history, get_news_headlines, LR_predict_future_price, get_politician_signal
 
 from memory import StockChatMemory
 
@@ -15,7 +15,7 @@ def get_ticker_from_input(user_input: str) -> str:
     subject = user_input.lower().replace("analyze", "").strip()
     
     prompt = f"""
-    The user wants to analyze a company. Extract the official stock ticker symbol.
+    The user wants to analyze a company. Extract the official stock ticker symbol. If they give you a ticker, just respond back the ticker the user gave.
     User input: "{subject}"
     
     Respond with ONLY the ticker symbol (e.g., AAPL, TSLA, MSFT). 
@@ -34,6 +34,7 @@ def build_prompt(
     headlines: list[str],
     days_ahead: int = 14,
     training_period: str = "6mo",
+    political_signal: str = "HOLD"
 ) -> str:
     price_change_text = "Unknown"
     percent_change_text = "Unknown"
@@ -121,6 +122,8 @@ Predicted Percent Change: {percent_change_text}
 Price History Summary: {price_summary}
 
 News Headlines Summary: {headline_summary}
+
+Politician Signal: {political_signal}
 """.strip()
 
 
@@ -218,9 +221,11 @@ Assistant:"""
                     )
                     current_price = prices[-1]["close"]
 
+                    pol_signal = get_politician_signal(ticker, future_date)
+
                     analysis_data = build_prompt(
                         ticker, current_price, predicted_price,
-                        future_date, prices, headlines, days_ahead, training_period
+                        future_date, prices, headlines, days_ahead, training_period, political_signal
                     )
 
                     # Final prompt with analysis data
