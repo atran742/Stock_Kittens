@@ -15,7 +15,7 @@ const randomCat = () => CATS[Math.floor(Math.random() * CATS.length)];
 const INITIAL_MESSAGES = [
   {
     role: 'agent',
-    text: "Meow! I'm Whiskers 🐾\n\nAsk me about politician trades, stock performance, or price predictions. I'll fetch real data and give you the purrfect analysis!",
+    text: "Meow! I'm Whiskers 🐾\n\nAsk me about stock performances or price predictions. I'll fetch real data and give you the purrfect analysis!",
     cat: '😸',
   },
 ];
@@ -77,7 +77,7 @@ export default function ChatPanel() {
           🐈‍⬛
         <div>
           <div className="chat-title">Whiskers AI</div>
-          <div className="chat-subtitle">Your congressional stock analyst</div>
+          <div className="chat-subtitle">Your AI Agent stock analyst</div>
         </div>
       </div>
 
