@@ -39,3 +39,16 @@ class StockChatMemory:
             ) ORDER BY id ASC
         """, (session_id, limit))
         return cursor.fetchall()
+    
+    # In memory.py — add this method to StockChatMemory:
+    def clear_session(self, session_id: str):
+        """Wipe history for a session so old data never bleeds into a new conversation."""
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM chat_history WHERE session_id = ?", (session_id,))
+        self.conn.commit()
+
+    def get_session_message_count(self, session_id: str) -> int:
+        """Check how many messages exist for this session."""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM chat_history WHERE session_id = ?", (session_id,))
+        return cursor.fetchone()[0]

@@ -23,12 +23,38 @@ Rules:
 - No explanation, no punctuation other than commas between tickers"""
 
     response = llm.invoke(prompt).strip().upper()
-    # Extract all valid ticker patterns from the response
     matches = re.findall(r'\b[A-Z]{1,5}\b', response)
-    # Filter out common false positives (english words the LLM might emit)
-    noise_words = {"I", "A", "THE", "AND", "OR", "FOR", "TO", "IN", "OF", "IF", "IT", "MY", "NO"}
-    tickers = [m for m in matches if m not in noise_words]
-    return tickers if tickers else ["UNKNOWN"]
+    
+    # Massively expanded noise word filter
+    noise_words = {
+        "I", "A", "THE", "AND", "OR", "FOR", "TO", "IN", "OF", "IF", "IT", "MY", "NO",
+        "IS", "ARE", "WAS", "BE", "AT", "BY", "AN", "AS", "ON", "UP", "DO", "GO",
+        "ALL", "ANY", "CAN", "DID", "GET", "GOT", "HAS", "HAD", "HIM", "HIS", "HOW",
+        "ITS", "LET", "MAY", "NOT", "NOW", "OUR", "OUT", "OWN", "SAY", "SHE", "SO",
+        "TOO", "TWO", "USE", "WAS", "WAY", "WE", "WHO", "WHY", "WILL", "WITH", "YES",
+        "YOU", "YOUR", "THAT", "THIS", "THEY", "FROM", "HAVE", "BEEN", "WERE", "SAID",
+        "EACH", "WHEN", "WHAT", "SOME", "THAN", "THEN", "THEM", "ALSO", "INTO", "OVER",
+        "AFTER", "BACK", "GOOD", "LIST", "STOCK", "STOCKS", "APPLE", "THERE", "WHICH",
+        "ABOUT", "WOULD", "COULD", "THEIR", "THESE", "OTHER", "BEING", "WHERE", "WHILE",
+        "SHOULD", "BEFORE", "TICKER", "SYMBOL", "COMPANY", "MARKET", "TRADE", "PRICE"
+    }
+    
+    candidates = [m for m in matches if m not in noise_words]
+    
+    if not candidates:
+        return ["UNKNOWN"]
+    
+    # Validate each candidate by actually checking if Yahoo Finance has data for it
+    # This is the key fix — if we can't get price data, it's not a real ticker
+    valid_tickers = []
+    for candidate in candidates:
+        prices = get_price_history(candidate, period="5d", interval="1d")
+        if prices:
+            valid_tickers.append(candidate)
+        else:
+            print(f"[!] Rejected '{candidate}' — no market data found, skipping.")
+    
+    return valid_tickers if valid_tickers else ["UNKNOWN"]
 
 
 def build_analysis_prompt(
@@ -134,7 +160,7 @@ def run_single_analysis(ticker: str, days_ahead: int = 14, training_period: str 
 
 def process_user_message(user_input: str, session_id: str) -> str:
     db = StockChatMemory()
-    past_messages = db.get_history(session_id, limit=10)
+    past_messages = db.get_history(session_id, limit=4)
     context_string = "\n".join([f"{role}: {msg}" for role, msg in past_messages])
 
     is_analysis_request = "analyze" in user_input.lower()
@@ -172,23 +198,31 @@ def process_user_message(user_input: str, session_id: str) -> str:
                     if is_comparison else ""
                 )
 
+                # Build the list of tickers actually analyzed this turn
+                analyzed_tickers = [block.split("\n")[0].replace("[ANALYSIS DATA: ", "").replace("]", "") 
+                                for block in all_analysis_blocks]
+                tickers_this_turn = ", ".join(analyzed_tickers)
+
                 final_prompt = f"""You are a direct, expert Stock Analyst.
-Using the analysis data below, respond to the user's request.
+                Using the analysis data below, respond to the user's request.
 
-Rules:
-- Always give a clear BUY, HOLD, or SELL verdict for each ticker. Default to HOLD if uncertain.
-- Never say "I cannot provide financial advice."
-- Cite specific headlines and price figures from the data.
-- Be concise and structured.{comparison_instruction}
+                STRICT RULES — violations will confuse the user:
+                - Only give verdicts for these exact tickers: {tickers_this_turn}
+                - NEVER mention or compare any ticker not present in the Analysis Data below
+                - NEVER invent price figures, percentages, or trends not present in the Analysis Data below
+                - All numbers you cite MUST come directly from the Analysis Data section
+                - Always give a clear BUY, HOLD, or SELL verdict. Default to HOLD if uncertain.
+                - Never say "I cannot provide financial advice."
+                - Be concise and structured.{comparison_instruction}
 
-Conversation History:
-{context_string}
+                Conversation History (for follow-up context only — do NOT pull stock data from here):
+                {context_string}
 
-User Request: {user_input}
+                User Request: {user_input}
 
-Analysis Data:
-{combined_data}
-"""
+                Analysis Data (your ONLY source of truth for this response):
+                {combined_data}
+                """
                 final_response = llm.invoke(final_prompt)
 
                 if failed:
@@ -228,6 +262,18 @@ def format_response(response: str) -> str:
 def main() -> None:
     session_id = "user_1"
     print("--- AI Stock Analyst ---")
+    
+    db = StockChatMemory()
+    existing_count = db.get_session_message_count(session_id)
+    
+    if existing_count > 0:
+        print(f"\n[Memory] Found {existing_count} messages from a previous session.")
+        choice = input("Start fresh? (y/n): ").strip().lower()
+        if choice == "y":
+            db.clear_session(session_id)
+            print("[Memory] Session cleared. Starting fresh.\n")
+        else:
+            print("[Memory] Resuming previous session.\n")
 
     while True:
         user_input = input("\nYou: ").strip()
