@@ -12,3 +12,5 @@ Then, open one last terminal and type "ollama serve"
 
 ###Potential Troubleshooting/ best results 
 run the main.py file through the terminal and answer (y) to clearing out old conversation data. The agent can then be used through the terminal or frontend. 
+
+https://docs.google.com/presentation/d/1JlHb6uL077F6Hl1aUY1R1FcGpt1kSLsn_t-YwErGWWw/edit?slide=id.g3d874c8a2ae_0_30#slide=id.g3d874c8a2ae_0_30
