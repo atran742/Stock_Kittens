@@ -161,8 +161,26 @@ def run_single_analysis(ticker: str, days_ahead: int = 14, training_period: str 
 def process_user_message(user_input: str, session_id: str) -> str:
     db = StockChatMemory()
     past_messages = db.get_history(session_id, limit=4)
-    context_string = "\n".join([f"{role}: {msg}" for role, msg in past_messages])
-
+    
+    # Strip out assistant messages that contain analysis data blocks
+    # so the LLM can't re-use old ticker data when analyzing a new one
+    filtered_messages = []
+    for role, msg in past_messages:
+        if role == "Assistant" and "[ANALYSIS DATA:" in msg:
+            # Keep only the verdict summary, not the raw data block
+            lines = msg.split("\n")
+            summary_lines = [l for l in lines if not l.startswith("[ANALYSIS DATA:") 
+                           and not l.startswith("Current Price:") 
+                           and not l.startswith("Predicted Price:")
+                           and not l.startswith("Political Signal:")
+                           and not l.startswith("Price History:")
+                           and "Headlines:" not in l
+                           and not l.strip().startswith('- "')]
+            filtered_messages.append((role, "\n".join(summary_lines).strip()))
+        else:
+            filtered_messages.append((role, msg))
+    
+    context_string = "\n".join([f"{role}: {msg}" for role, msg in filtered_messages])
     is_analysis_request = "analyze" in user_input.lower()
 
     if is_analysis_request:
@@ -204,25 +222,26 @@ def process_user_message(user_input: str, session_id: str) -> str:
                 tickers_this_turn = ", ".join(analyzed_tickers)
 
                 final_prompt = f"""You are a direct, expert Stock Analyst.
-                Using the analysis data below, respond to the user's request.
+Using the analysis data below, respond to the user's request.
 
-                STRICT RULES — violations will confuse the user:
-                - Only give verdicts for these exact tickers: {tickers_this_turn}
-                - NEVER mention or compare any ticker not present in the Analysis Data below
-                - NEVER invent price figures, percentages, or trends not present in the Analysis Data below
-                - All numbers you cite MUST come directly from the Analysis Data section
-                - Always give a clear BUY, HOLD, or SELL verdict. Default to HOLD if uncertain.
-                - Never say "I cannot provide financial advice."
-                - Be concise and structured.{comparison_instruction}
+STRICT RULES — violations will confuse the user:
+- Only give verdicts for these exact tickers: {tickers_this_turn}
+- The user asked about ONLY: {tickers_this_turn}. Do NOT analyze or mention any other ticker.
+- NEVER mention or compare any ticker not present in the Analysis Data below
+- NEVER invent price figures, percentages, or trends not present in the Analysis Data below
+- All numbers you cite MUST come directly from the Analysis Data section
+- Always give a clear BUY, HOLD, or SELL verdict. Default to HOLD if uncertain.
+- Never say "I cannot provide financial advice."
+- Be concise and structured.{comparison_instruction}
 
-                Conversation History (for follow-up context only — do NOT pull stock data from here):
-                {context_string}
+Conversation History (for conversational context ONLY — ignore any stock data in here):
+{context_string}
 
-                User Request: {user_input}
+User Request: {user_input}
 
-                Analysis Data (your ONLY source of truth for this response):
-                {combined_data}
-                """
+Analysis Data (your ONLY source of truth for numbers and tickers):
+{combined_data}
+"""
                 final_response = llm.invoke(final_prompt)
 
                 if failed:
